@@ -1,72 +1,60 @@
-"""
-Web scraper module for capturing m3u8 URLs and metadata from video streaming sites
-"""
+"""Web scraper for capturing m3u8 URLs and metadata from video streaming sites."""
 
 import asyncio
+from typing import Any, Dict, List, Optional, Tuple
+from urllib.parse import urlparse
+
 from patchright.async_api import async_playwright
-from typing import Dict, List, Optional, Tuple
 
 
-async def capture_data(url: str) -> Tuple[Dict[str, any], List[str], Optional[dict]]:
-    """
-    Captures all index.m3u8 and master.m3u8 URLs (with full tokens),
-    extracts /watch/* links from the page, and captures metadata from API call.
+async def capture_data(url: str) -> Tuple[Dict[str, Any], List[str], Optional[Dict[str, Any]]]:
+    """Capture m3u8 URLs, watch links, and metadata from a video page.
     
     Args:
-        url: The video watch page URL
+        url: Video watch page URL
         
     Returns:
-        Tuple containing:
-        - m3u8_urls: Dict with 'index' (str) and/or 'master' (str or list) keys
-        - watch_links: List of related /watch/* URLs found on the page
-        - metadata: JSON metadata from the API response
+        Tuple of (m3u8_urls, watch_links, metadata)
     """
-    m3u8_urls = {}
-    master_urls = []  # Store all master.m3u8 URLs
-    watch_links = []
-    metadata = None
+    m3u8_urls: Dict[str, Any] = {}
+    master_urls: List[str] = []
+    watch_links: List[str] = []
+    metadata: Optional[Dict[str, Any]] = None
     
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=True, channel="chrome")
         context = await browser.new_context()
         page = await context.new_page()
         
-        # Listen to network requests for m3u8 files
-        async def handle_request(request):
-            url = request.url
-            if '.m3u8' in url:
-                if 'index.m3u8' in url:
-                    m3u8_urls['index'] = url
-                elif 'master.m3u8' in url and url not in master_urls:
-                    master_urls.append(url)
+        async def handle_request(request: Any) -> None:
+            request_url = request.url
+            if '.m3u8' in request_url:
+                if 'index.m3u8' in request_url:
+                    m3u8_urls['index'] = request_url
+                elif 'master.m3u8' in request_url and request_url not in master_urls:
+                    master_urls.append(request_url)
         
-        # Listen to API responses for metadata
-        async def handle_response(response):
+        async def handle_response(response: Any) -> None:
             nonlocal metadata
             if '/api/v1/watch/' in response.url and response.status == 200:
                 try:
-                    data = await response.json()
-                    metadata = data
+                    metadata = await response.json()
                 except Exception:
                     pass
         
         page.on('request', handle_request)
         page.on('response', handle_response)
         
-        # Navigate to the page
         try:
             await page.goto(url, wait_until='domcontentloaded', timeout=15000)
         except Exception as e:
             print(f"Navigation error: {e}")
         
-        # Wait for metadata and m3u8 files
-        max_wait = 8
-        for i in range(max_wait * 2):
+        for _ in range(16):
             await asyncio.sleep(0.5)
             if metadata and m3u8_urls:
                 break
         
-        # Extract related /watch/* links from the page (only if m3u8 not found)
         if not m3u8_urls:
             try:
                 elements = await page.locator('xpath=//*[@id="root"]/div[2]/div/div[2]/div/div//a').all()
@@ -74,11 +62,8 @@ async def capture_data(url: str) -> Tuple[Dict[str, any], List[str], Optional[di
                     href = await element.get_attribute('href')
                     if href and '/watch/' in href:
                         if href.startswith('/'):
-                            # Extract domain from the current URL
-                            from urllib.parse import urlparse
                             parsed = urlparse(url)
-                            base_url = f"{parsed.scheme}://{parsed.netloc}"
-                            full_url = f"{base_url}{href}"
+                            full_url = f"{parsed.scheme}://{parsed.netloc}{href}"
                         else:
                             full_url = href
                         if full_url not in watch_links:
@@ -88,7 +73,6 @@ async def capture_data(url: str) -> Tuple[Dict[str, any], List[str], Optional[di
         
         await browser.close()
     
-    # Store master URLs as list if multiple found, single string if only one
     if master_urls:
         m3u8_urls['master'] = master_urls if len(master_urls) > 1 else master_urls[0]
     

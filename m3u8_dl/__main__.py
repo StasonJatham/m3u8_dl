@@ -1,6 +1,4 @@
-"""
-Allow running the package with python -m m3u8_dl
-"""
+"""Entry point for python -m m3u8_dl."""
 
 from .cli import main
 

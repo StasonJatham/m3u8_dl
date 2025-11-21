@@ -9,7 +9,7 @@
 [![Python 3.4+](https://img.shields.io/badge/python-3.14+-blue.svg)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/license-Educational%20Use-orange.svg)](#legal-notice)
 
-[Features](#features) • [Quick Start](#quick-start) • [Usage](#usage) • [Docker](#docker) • [Legal Notice](#legal-notice)
+[Features](#features) • [Quick Start](#quick-start) • [Usage](#usage) • [Radarr](#radarr-upload-tool) • [Sonarr](#sonarr-upload-tool) • [Docker](#docker)
 
 </div>
 
@@ -25,12 +25,30 @@
 
 ## Features
 
+### HLS Downloader
+
 - 🎯 **Automated Stream Capture** - Intercepts HLS streams with authentication tokens
 - 📝 **Smart Metadata Extraction** - Generates proper filenames from API metadata
 - 🔄 **Resilient Fallback System** - Tries multiple mirrors and stream variants automatically
 - 🐳 **Docker Ready** - Pre-configured container with all dependencies
 - 🛠️ **Dual Interface** - Use as CLI tool or Python library
 - ⚡ **Optimized Performance** - Concurrent mirror scanning and intelligent retry logic
+
+### Radarr Uploader
+
+- 🎬 **Automatic TMDB Lookup** - Searches and matches movies automatically
+- 📚 **Library Integration** - Seamlessly adds movies to your Radarr library
+- 🏷️ **Smart Filename Parsing** - Extracts title and year from filenames
+- 📁 **Organized Import** - Properly structures files in Radarr's format
+- ⚙️ **Flexible Configuration** - Supports custom quality profiles and root folders
+
+### Sonarr Uploader
+
+- 📺 **Automatic TVDB Lookup** - Searches and matches TV series automatically
+- 📚 **Library Integration** - Seamlessly adds shows to your Sonarr library
+- 🏷️ **Smart Episode Parsing** - Extracts series/season/episode from filenames (S01E01, 1x01, 101)
+- 📁 **Season Organization** - Properly structures episodes in season folders
+- ⚙️ **Flexible Configuration** - Supports custom quality profiles and root folders
 
 ## Quick Start
 
@@ -44,7 +62,7 @@ pip install patchright yt-dlp
 patchright install chromium
 
 # Download a video
-python -m m3u8_dl 1590407
+python -m m3u8_dl https://example.com/watch/1590407
 ```
 
 ### Docker
@@ -54,21 +72,31 @@ python -m m3u8_dl 1590407
 docker build -t m3u8-dl .
 
 # Run container
-docker run -v $(pwd)/downloads:/app/downloads m3u8-dl 1590407
+docker run -v $(pwd)/downloads:/app/downloads m3u8-dl https://example.com/watch/1590407
 ```
 
 ## Usage
 
 ### Command Line
 
-**By video ID:**
-```bash
-python -m m3u8_dl 1590407
-```
-
-**By URL:**
+**Basic download:**
 ```bash
 python -m m3u8_dl https://example.com/watch/1590407
+```
+
+**With custom filename:**
+```bash
+python -m m3u8_dl https://example.com/watch/1590407 --name my_video
+```
+
+**Save to specific directory:**
+```bash
+python -m m3u8_dl https://example.com/watch/1590407 -o ~/Downloads
+```
+
+**Quiet mode:**
+```bash
+python -m m3u8_dl https://example.com/watch/1590407 --quiet
 ```
 
 ### Python Library
@@ -78,14 +106,117 @@ import asyncio
 from m3u8_dl import download_video
 
 async def main():
-    await download_video("1590407")  # By ID
-    await download_video("https://example.com/watch/1590407")  # By URL
-    await download_video("1590407", verbose=False)  # Quiet mode
+    await download_video("https://example.com/watch/1590407")  # Basic
+    await download_video("https://example.com/watch/1590407", verbose=False)  # Quiet mode
+    await download_video("https://example.com/watch/1590407", custom_filename="my_video")  # Custom name
 
 asyncio.run(main())
 ```
 
+## Radarr Upload Tool
+
+Upload and automatically import downloaded movies into Radarr with proper metadata.
+
+> **📖 See [RADARR_GUIDE.md](docs/RADARR_GUIDE.md) for detailed documentation and advanced usage.**
+
+### Setup
+
+```bash
+# Set environment variables (recommended)
+export RADARR_URL=http://localhost:7878
+export RADARR_API_KEY=your_api_key_here
+
+# Or use command line flags
+python radarr_upload.py --url http://localhost:7878 --api-key your_api_key movie.mp4
+```
+
+### Usage
+
+**Auto-detect title and year from filename:**
+```bash
+python radarr_upload.py "The Matrix 1999.mp4"
+```
+
+**Specify title and year manually:**
+```bash
+python radarr_upload.py movie.mp4 --title "The Matrix" --year 1999
+```
+
+**Move file instead of copy:**
+```bash
+python radarr_upload.py movie.mp4 --move
+```
+
+**List quality profiles:**
+```bash
+python radarr_upload.py --list-profiles
+```
+
+**List root folders:**
+```bash
+python radarr_upload.py --list-folders
+```
+
+**Complete workflow example:**
+```bash
+# Download video
+python -m m3u8_dl https://example.com/watch/1590407 -n "The Matrix 1999"
+
+# Upload to Radarr
+python radarr_upload.py "The Matrix 1999.mp4"
+```
+
+## Sonarr Upload Tool
+
+Upload and automatically import downloaded TV episodes into Sonarr with proper metadata.
+
+> **📖 See [SONARR_GUIDE.md](docs/SONARR_GUIDE.md) for detailed documentation and advanced usage.**
+
+### Setup
+
+```bash
+# Set environment variables (recommended)
+export SONARR_URL=http://localhost:8989
+export SONARR_API_KEY=your_api_key_here
+
+# Or use command line flags
+python sonarr_upload.py --url http://localhost:8989 --api-key your_api_key episode.mp4
+```
+
+### Usage
+
+**Auto-detect from filename:**
+```bash
+python sonarr_upload.py "Breaking.Bad.S01E01.mp4"
+```
+
+**Specify series, season, and episode manually:**
+```bash
+python sonarr_upload.py episode.mp4 --title "Breaking Bad" --season 1 --episode 1
+```
+
+**Parse filename without uploading:**
+```bash
+python sonarr_upload.py "Show.Name.S02E05.mp4" --parse
+```
+
+**Move instead of copy:**
+```bash
+python sonarr_upload.py episode.mp4 --move
+```
+
+**Complete workflow example:**
+```bash
+# Download episode
+python -m m3u8_dl https://example.com/watch/1590407 -n "Breaking Bad S01E01"
+
+# Upload to Sonarr
+python sonarr_upload.py "Breaking Bad S01E01.mp4"
+```
+
 ## How It Works
+
+### HLS Downloader
 
 1. **Browser Automation** - Launches headless Chrome via patchright to execute JavaScript
 2. **Network Interception** - Captures authenticated .m3u8 HLS stream URLs
@@ -112,16 +243,16 @@ docker build -t m3u8-dl .
 
 ```bash
 # Download to current directory
-docker run -v $(pwd)/downloads:/app/downloads m3u8-dl <VIDEO_ID>
+docker run -v $(pwd)/downloads:/app/downloads m3u8-dl <VIDEO_URL>
 
 # Example
-docker run -v $(pwd)/downloads:/app/downloads m3u8-dl 1590407
+docker run -v $(pwd)/downloads:/app/downloads m3u8-dl https://example.com/watch/1590407
 ```
 
 ### Environment Variables
 
 ```bash
-docker run -e VERBOSE=false -v $(pwd)/downloads:/app/downloads m3u8-dl 1590407
+docker run -e VERBOSE=false -v $(pwd)/downloads:/app/downloads m3u8-dl https://example.com/watch/1590407
 ```
 
 ## Troubleshooting
