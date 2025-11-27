@@ -79,6 +79,8 @@ docker run -p 8000:8000 -v $(pwd)/downloads:/app/downloads --env-file .env m3u8-
 
 The easiest way to use the tool is via the Web UI.
 
+![Web UI Screenshot](docs/m3u8-web-ui.png)
+
 1. Start the server: `python -m m3u8_dl.server`
 2. Open `http://localhost:8000`
 3. Enter the video URL and select the type (Movie or Series)

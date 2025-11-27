@@ -42,3 +42,41 @@ async def download_m3u8(url: str, filename: str) -> None:
     loop = asyncio.get_running_loop()
     with ThreadPoolExecutor() as pool:
         await loop.run_in_executor(pool, _download_sync, url, filename)
+
+def _download_direct_sync(url: str, output_dir: str, format_str: str) -> None:
+    """Synchronous direct download function."""
+    ydl_opts = {
+        'format': format_str,
+        'paths': {'home': output_dir},
+        'outtmpl': '%(title)s.%(ext)s',
+        'quiet': True,
+        'no_warnings': True,
+    }
+    
+    try:
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            ydl.download([url])
+        logger.info(f"✓ Direct download completed: {url}")
+    except Exception as e:
+        logger.error(f"✗ Direct download failed: {e}")
+        raise
+
+async def download_direct(url: str, output_dir: str, format_str: str = 'best') -> bool:
+    """Download video directly using yt-dlp.
+    
+    Args:
+        url: Video URL
+        output_dir: Directory to save the file
+        format_str: yt-dlp format string
+        
+    Returns:
+        True if successful, False otherwise
+    """
+    loop = asyncio.get_running_loop()
+    with ThreadPoolExecutor() as pool:
+        try:
+            await loop.run_in_executor(pool, _download_direct_sync, url, output_dir, format_str)
+            return True
+        except Exception as e:
+            logger.error(f"Direct download failed: {e}")
+            return False

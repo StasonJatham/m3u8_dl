@@ -47,20 +47,48 @@
             margin-top: 40px;
         }
 
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 40px;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 20px;
+        }
+
+        .logo {
+            height: 60px;
+            width: auto;
+        }
+
         h1 {
             font-weight: 700;
             letter-spacing: -0.05em;
-            margin-bottom: 20px;
             text-transform: uppercase;
-            border-bottom: 2px solid var(--border-color);
-            padding-bottom: 10px;
+            margin: 0;
+            border: none;
+            padding: 0;
         }
 
-        /* Tabs */
+        .footer {
+            margin-top: 60px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+            text-align: center;
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .footer {
+                color: #999;
+            }
+        }
+
         .tabs {
             display: flex;
-            border-bottom: 1px solid var(--border-color);
-            margin-bottom: 30px;
+            gap: 10px;
+            margin-bottom: 40px;
         }
 
         .tab {
@@ -206,10 +234,14 @@
 </head>
 <body>
     <div class="container">
-        <h1>m3u8-dl Manager</h1>
+        <div class="header">
+            <img src="/static/logo.webp" alt="Logo" class="logo">
+            <h1>m3u8-dl Manager</h1>
+        </div>
 
         <div class="tabs">
             <div class="tab active" onclick="switchTab('download')">Download</div>
+            <div class="tab" onclick="switchTab('direct')">Direct DL</div>
             <div class="tab" onclick="switchTab('history')">History</div>
             <div class="tab" onclick="switchTab('settings')">Settings</div>
         </div>
@@ -266,6 +298,24 @@
                 </div>
 
                 <button type="submit">Queue Download</button>
+            </form>
+        </div>
+
+        <!-- Direct Download Tab -->
+        <div id="direct" class="tab-content">
+            <form action="/submit-form" method="post">
+                <input type="hidden" name="type" value="direct">
+                <div class="form-group">
+                    <label for="direct-url">Video URL</label>
+                    <input type="text" id="direct-url" name="url" required placeholder="https://youtube.com/watch?v=..." autocomplete="off">
+                </div>
+                
+                <div class="form-group">
+                    <label for="direct-title">Title (Optional)</label>
+                    <input type="text" id="direct-title" name="title" placeholder="Leave empty to use video title">
+                </div>
+
+                <button type="submit">Start Direct Download</button>
             </form>
         </div>
 
@@ -337,6 +387,10 @@
 
                 <button type="button" onclick="saveSettings()">Save Settings</button>
             </form>
+        </div>
+
+        <div class="footer">
+            <p>m3u8-dl Manager &copy; 2025 • Educational Use Only</p>
         </div>
     </div>
 

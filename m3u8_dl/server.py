@@ -7,12 +7,14 @@ from datetime import datetime
 
 from fastapi import FastAPI, BackgroundTasks, HTTPException, Request, Form, WebSocket, WebSocketDisconnect, Depends
 from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from .config import config
 from .downloader import download_video
+from .video_downloader import download_direct
 from .radarr_uploader import RadarrUploader
 from .sonarr_uploader import SonarrUploader
 from .logging_config import setup_logging
@@ -52,6 +54,11 @@ async def lifespan(app: FastAPI):
     logger.info("Server shutting down...")
 
 app = FastAPI(title="m3u8-dl Server", lifespan=lifespan)
+
+# Mount static files
+from pathlib import Path
+static_dir = Path(__file__).parent / "static"
+app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 
 class DownloadRequest(BaseModel):
     url: str
@@ -99,6 +106,21 @@ async def process_download(req: DownloadRequest, download_id: int):
         
         await update_status(db, download_id, "downloading", "0%", "Starting download...")
         
+        if req.type == 'direct':
+            download_dir = settings.download_dir
+            import os
+            os.makedirs(download_dir, exist_ok=True)
+            
+            await update_status(db, download_id, "downloading", "10%", "Downloading with yt-dlp...")
+            
+            success = await download_direct(req.url, download_dir)
+            
+            if success:
+                await update_status(db, download_id, "completed", "100%", "Download completed")
+            else:
+                await update_status(db, download_id, "failed", error="Download failed")
+            return
+
         temp_filename = f"download_{req.type}_{req.tmdbId or req.tvdbId or 'unknown'}_{download_id}"
         
         import os
