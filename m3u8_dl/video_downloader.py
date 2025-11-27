@@ -9,6 +9,9 @@ import yt_dlp
 
 logger = logging.getLogger(__name__)
 
+# Shared executor for all downloads
+executor = ThreadPoolExecutor(max_workers=4)
+
 def _download_sync(url: str, filename: str) -> None:
     """Synchronous download function to be run in executor."""
     ydl_opts: Dict[str, Any] = {
@@ -40,8 +43,7 @@ async def download_m3u8(url: str, filename: str) -> None:
         Exception: If download fails
     """
     loop = asyncio.get_running_loop()
-    with ThreadPoolExecutor() as pool:
-        await loop.run_in_executor(pool, _download_sync, url, filename)
+    await loop.run_in_executor(executor, _download_sync, url, filename)
 
 def _download_direct_sync(url: str, output_dir: str, format_str: str) -> None:
     """Synchronous direct download function."""
@@ -73,10 +75,9 @@ async def download_direct(url: str, output_dir: str, format_str: str = 'best') -
         True if successful, False otherwise
     """
     loop = asyncio.get_running_loop()
-    with ThreadPoolExecutor() as pool:
-        try:
-            await loop.run_in_executor(pool, _download_direct_sync, url, output_dir, format_str)
-            return True
-        except Exception as e:
-            logger.error(f"Direct download failed: {e}")
-            return False
+    try:
+        await loop.run_in_executor(executor, _download_direct_sync, url, output_dir, format_str)
+        return True
+    except Exception as e:
+        logger.error(f"Direct download failed: {e}")
+        return False

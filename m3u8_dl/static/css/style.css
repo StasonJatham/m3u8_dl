@@ -1,0 +1,234 @@
+:root {
+    --bg-color: #ffffff;
+    --text-color: #000000;
+    --border-color: #000000;
+    --input-bg: #ffffff;
+    --button-bg: #000000;
+    --button-text: #ffffff;
+    --button-hover: #333333;
+    --table-stripe: #f5f5f5;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg-color: #000000;
+        --text-color: #ffffff;
+        --border-color: #ffffff;
+        --input-bg: #000000;
+        --button-bg: #ffffff;
+        --button-text: #000000;
+        --button-hover: #cccccc;
+        --table-stripe: #1a1a1a;
+    }
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    line-height: 1.6;
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+    min-height: 100vh;
+}
+
+.container {
+    width: 100%;
+    max-width: 800px;
+    margin-top: 40px;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 40px;
+    border-bottom: 2px solid var(--border-color);
+    padding-bottom: 20px;
+}
+
+.logo {
+    height: 60px;
+    width: auto;
+}
+
+h1 {
+    font-weight: 700;
+    letter-spacing: -0.05em;
+    text-transform: uppercase;
+    margin: 0;
+    border: none;
+    padding: 0;
+}
+
+.footer {
+    margin-top: 60px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-color);
+    text-align: center;
+    font-size: 0.8rem;
+    color: #666;
+}
+
+@media (prefers-color-scheme: dark) {
+    .footer {
+        color: #999;
+    }
+}
+
+.tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 40px;
+}
+
+.tab {
+    padding: 10px 20px;
+    cursor: pointer;
+    border: 1px solid transparent;
+    border-bottom: none;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.9rem;
+}
+
+.tab.active {
+    border-color: var(--border-color);
+    border-bottom: 1px solid var(--bg-color);
+    margin-bottom: -1px;
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* Forms */
+.form-group {
+    margin-bottom: 24px;
+}
+
+label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.05em;
+}
+
+input[type="text"],
+input[type="number"],
+select {
+    width: 100%;
+    padding: 12px;
+    background-color: var(--input-bg);
+    border: 2px solid var(--border-color);
+    color: var(--text-color);
+    font-family: inherit;
+    font-size: 1rem;
+    box-sizing: border-box;
+    border-radius: 0;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+input:focus, select:focus {
+    outline: none;
+    box-shadow: 4px 4px 0 var(--border-color);
+}
+
+button {
+    display: block;
+    width: 100%;
+    padding: 16px;
+    background-color: var(--button-bg);
+    color: var(--button-text);
+    border: none;
+    font-size: 1rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: transform 0.1s ease, box-shadow 0.1s ease;
+    margin-top: 32px;
+}
+
+button:hover {
+    transform: translateY(-2px);
+    box-shadow: 4px 4px 0 var(--text-color);
+}
+
+/* Table */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    font-size: 0.9rem;
+}
+
+th, td {
+    text-align: left;
+    padding: 12px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+th {
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    letter-spacing: 0.05em;
+}
+
+tr:nth-child(even) {
+    background-color: var(--table-stripe);
+}
+
+.status-badge {
+    padding: 4px 8px;
+    border: 1px solid var(--border-color);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    font-weight: 600;
+}
+
+.hidden {
+    display: none;
+}
+
+.alert {
+    padding: 16px;
+    border: 2px solid var(--border-color);
+    margin-bottom: 32px;
+    font-weight: 500;
+    border-style: dashed;
+}
+
+.row {
+    display: flex;
+    gap: 20px;
+}
+
+.col {
+    flex: 1;
+}
+
+.progress-bar {
+    height: 4px;
+    background-color: var(--border-color);
+    width: 0%;
+    transition: width 0.3s ease;
+    margin-top: 5px;
+}
+
+.action-btn {
+    padding: 4px 8px;
+    margin-left: 5px;
+    font-size: 0.7rem;
+    width: auto;
+    display: inline-block;
+    margin-top: 0;
+}

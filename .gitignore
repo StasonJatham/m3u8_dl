@@ -43,3 +43,7 @@ wheels/
 # OS
 .DS_Store
 Thumbs.db
+
+# Certificates
+*.pem
+*.key

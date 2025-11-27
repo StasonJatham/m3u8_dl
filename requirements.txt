@@ -2,7 +2,7 @@ patchright
 yt-dlp
 requests
 fastapi
-uvicorn
+hypercorn
 python-dotenv
 jinja2
 python-multipart
