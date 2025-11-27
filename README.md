@@ -117,6 +117,41 @@ async def main():
 asyncio.run(main())
 ```
 
+### API Documentation
+
+The server provides a REST API for automation and integration.
+
+#### Queue a Download
+
+```bash
+curl -X POST http://localhost:8000/api/download \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "https://example.com/watch/123",
+    "type": "movie",
+    "title": "My Movie",
+    "year": 2024
+  }'
+```
+
+#### Get Download History
+
+```bash
+curl http://localhost:8000/api/history
+```
+
+#### Delete a Download
+
+```bash
+curl -X DELETE http://localhost:8000/api/download/{id}
+```
+
+#### Index to Radarr/Sonarr
+
+```bash
+curl -X POST http://localhost:8000/api/index/{id}
+```
+
 ## Radarr Integration
 
 Upload and automatically import downloaded movies into Radarr with proper metadata.

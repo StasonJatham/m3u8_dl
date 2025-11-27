@@ -18,11 +18,10 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Install patchright Chrome browser
-RUN patchright install chrome
+RUN patchright install chromium
 
 # Copy application code
 COPY m3u8_dl/ ./m3u8_dl/
-COPY main.py .
 
 # Create downloads directory
 RUN mkdir -p /app/downloads
@@ -37,9 +36,6 @@ VOLUME ["/app/downloads"]
 
 # Expose server port
 EXPOSE 8000
-
-# Set default working directory for downloads
-WORKDIR /app/downloads
 
 # Entry point
 ENTRYPOINT ["python"]
