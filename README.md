@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="docs/pirate-python-whiteweb.webp" alt="Logo" width="200" />
+
 # M3U8 Downloader
 
 **Professional HLS Stream Downloader for Educational Research**
