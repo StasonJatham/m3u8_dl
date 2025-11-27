@@ -1,3 +1,10 @@
 patchright
 yt-dlp
 requests
+fastapi
+uvicorn
+python-dotenv
+jinja2
+python-multipart
+sqlalchemy
+websockets

@@ -7,6 +7,7 @@ import sys
 from typing import Optional
 
 from .downloader import download_video
+from .logging_config import setup_logging
 
 
 def create_parser() -> argparse.ArgumentParser:
@@ -69,6 +70,8 @@ def main() -> None:
     
     args = parser.parse_args()
     verbose = not args.quiet
+    
+    setup_logging(verbose=verbose)
     
     if args.output:
         os.makedirs(args.output, exist_ok=True)

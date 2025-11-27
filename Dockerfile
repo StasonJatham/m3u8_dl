@@ -30,15 +30,19 @@ RUN mkdir -p /app/downloads
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
 ENV VERBOSE=true
+ENV PYTHONPATH=/app
 
 # Default volume for downloads
 VOLUME ["/app/downloads"]
+
+# Expose server port
+EXPOSE 8000
 
 # Set default working directory for downloads
 WORKDIR /app/downloads
 
 # Entry point
-ENTRYPOINT ["python", "-m", "m3u8_dl"]
+ENTRYPOINT ["python"]
 
-# Default command (can be overridden)
-CMD ["--help"]
+# Default command runs the server
+CMD ["-m", "m3u8_dl.server"]
