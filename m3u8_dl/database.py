@@ -43,6 +43,8 @@ class Download(Base):
     year = Column(Integer, nullable=True)
     season = Column(Integer, nullable=True)
     episode = Column(Integer, nullable=True)
+    tmdb_id = Column(Integer, nullable=True)
+    tvdb_id = Column(Integer, nullable=True)
     
     status = Column(String, default="queued") # queued, downloading, importing, completed, failed
     progress = Column(String, default="0%")

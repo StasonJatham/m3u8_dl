@@ -19,6 +19,8 @@ async def queue_download(req: DownloadRequest, background_tasks: BackgroundTasks
         year=req.year,
         season=req.season,
         episode=req.episode,
+        tmdb_id=req.tmdbId,
+        tvdb_id=req.tvdbId,
         status="queued"
     )
     db.add(db_download)

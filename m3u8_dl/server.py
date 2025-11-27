@@ -8,6 +8,7 @@ from .logging_config import setup_logging
 from .database import init_db, SessionLocal, Download
 from .routers import api, views
 from .services.websocket_manager import manager
+from .services.download_service import process_download, DownloadRequest
 
 # Setup logging
 logger = setup_logging(verbose=True)
@@ -18,17 +19,42 @@ async def lifespan(app: FastAPI):
     logger.info("Server starting up...")
     init_db()
     
-    # Reset interrupted downloads
+    # Resume queued and interrupted downloads
     db = SessionLocal()
     try:
-        interrupted = db.query(Download).filter(Download.status.in_(["downloading", "importing"])).all()
-        for download in interrupted:
-            logger.warning(f"Marking interrupted download {download.id} as failed")
-            download.status = "failed"
-            download.error_message = "Server restarted during processing"
-        db.commit()
+        # Find tasks that were queued or in progress
+        pending = db.query(Download).filter(Download.status.in_(["queued", "downloading", "importing"])).all()
+        
+        if pending:
+            logger.info(f"Found {len(pending)} pending downloads. Resuming...")
+            
+            for download in pending:
+                # Reset status to queued if it was interrupted
+                if download.status != "queued":
+                    download.status = "queued"
+                    download.error_message = None
+                    download.progress = "0%"
+                    download.current_task = "Resuming..."
+                
+                # Reconstruct request
+                req = DownloadRequest(
+                    url=download.url,
+                    type=download.type,
+                    title=download.title,
+                    year=download.year,
+                    season=download.season,
+                    episode=download.episode,
+                    tmdbId=download.tmdb_id,
+                    tvdbId=download.tvdb_id
+                )
+                
+                # Start background task
+                asyncio.create_task(process_download(req, download.id))
+            
+            db.commit()
+            
     except Exception as e:
-        logger.error(f"Error resetting downloads: {e}")
+        logger.error(f"Error resuming downloads: {e}")
     finally:
         db.close()
         
