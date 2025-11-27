@@ -1,7 +1,7 @@
 """Tests for Sonarr uploader filename parsing."""
 
 import pytest
-from m3u8_dl.sonarr_uploader import SonarrUploader
+from m3u8_dl.integrations.sonarr import SonarrUploader
 
 
 def test_parse_episode_filename_s01e01_format():

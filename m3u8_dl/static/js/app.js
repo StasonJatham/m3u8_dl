@@ -63,10 +63,65 @@ async function cancelDownload(id) {
     }
 }
 
+async function deleteDownload(id) {
+    if (!confirm('Delete this download and file?')) return;
+    try {
+        const res = await fetch(`/api/download/${id}`, { method: 'DELETE' });
+        if (res.ok) {
+            document.getElementById(`download-${id}`).remove();
+        } else {
+            alert('Failed to delete download');
+        }
+    } catch (e) {
+        alert('Failed to delete download');
+    }
+}
+
+async function indexDownload(id) {
+    try {
+        const res = await fetch(`/api/index/${id}`, { method: 'POST' });
+        if (res.ok) {
+            alert('Indexing started');
+        } else {
+            const data = await res.json();
+            alert('Failed to start indexing: ' + data.detail);
+        }
+    } catch (e) {
+        alert('Failed to start indexing');
+    }
+}
+
+function playVideo(path) {
+    const modal = document.getElementById('video-modal');
+    const player = document.getElementById('video-player');
+    // Convert absolute path to relative /downloads/ path
+    // Assuming path starts with configured download dir, but for simplicity we can just use the filename if we serve the dir
+    const filename = path.split('/').pop();
+    player.src = `/downloads/${filename}`;
+    modal.classList.add('active');
+    player.play();
+}
+
+function closeVideoModal() {
+    const modal = document.getElementById('video-modal');
+    const player = document.getElementById('video-player');
+    player.pause();
+    player.src = '';
+    modal.classList.remove('active');
+}
+
 function getActionButtons(download) {
     let buttons = '';
-    if (download.status === 'failed' || download.status === 'completed') {
+    if (download.status === 'failed') {
         buttons += `<button class="action-btn" onclick="retryDownload(${download.id})">Retry</button>`;
+        buttons += `<button class="action-btn" onclick="deleteDownload(${download.id})">Delete</button>`;
+    }
+    if (download.status === 'completed') {
+        if (download.file_path) {
+            buttons += `<button class="action-btn" onclick="playVideo('${download.file_path.replace(/\\/g, '/')}')">Play</button>`;
+            buttons += `<button class="action-btn" onclick="indexDownload(${download.id})">Index</button>`;
+        }
+        buttons += `<button class="action-btn" onclick="deleteDownload(${download.id})">Delete</button>`;
     }
     if (download.status === 'downloading' || download.status === 'queued') {
         buttons += `<button class="action-btn" onclick="cancelDownload(${download.id})">Cancel</button>`;

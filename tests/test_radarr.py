@@ -1,7 +1,7 @@
 """Tests for Radarr uploader filename parsing."""
 
 import pytest
-from m3u8_dl.radarr_uploader import RadarrUploader
+from m3u8_dl.integrations.radarr import RadarrUploader
 
 
 def test_extract_title_from_filename():

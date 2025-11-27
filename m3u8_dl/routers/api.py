@@ -3,7 +3,7 @@ from fastapi import APIRouter, BackgroundTasks, Depends, Form, WebSocket, WebSoc
 from sqlalchemy.orm import Session
 
 from ..database import get_db, Download, Settings
-from ..services.download_service import process_download, DownloadRequest, update_status
+from ..services.download_service import process_download, DownloadRequest, update_status, delete_download_files, index_download
 from ..services.websocket_manager import manager
 
 router = APIRouter(prefix="/api")
@@ -38,7 +38,8 @@ async def queue_download(req: DownloadRequest, background_tasks: BackgroundTasks
             "status": db_download.status,
             "type": db_download.type,
             "progress": "0%",
-            "task": "Queued"
+            "task": "Queued",
+            "file_path": None
         }
     })
     
@@ -48,6 +49,41 @@ async def queue_download(req: DownloadRequest, background_tasks: BackgroundTasks
 async def get_history(db: Session = Depends(get_db)):
     downloads = db.query(Download).order_by(Download.created_at.desc()).limit(50).all()
     return downloads
+
+@router.delete("/download/{download_id}")
+async def delete_download(download_id: int, db: Session = Depends(get_db)):
+    """Delete a download and its files."""
+    download = db.query(Download).filter(Download.id == download_id).first()
+    if not download:
+        raise HTTPException(status_code=404, detail="Download not found")
+    
+    # Delete files
+    if download.file_path:
+        delete_download_files(download.file_path)
+    
+    db.delete(download)
+    db.commit()
+    
+    await manager.broadcast({
+        "type": "delete",
+        "id": download_id
+    })
+    
+    return {"status": "deleted"}
+
+@router.post("/index/{download_id}")
+async def index_download_route(download_id: int, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
+    """Manually trigger indexing to Radarr/Sonarr."""
+    download = db.query(Download).filter(Download.id == download_id).first()
+    if not download:
+        raise HTTPException(status_code=404, detail="Download not found")
+        
+    if download.status != "completed":
+        raise HTTPException(status_code=400, detail="Download must be completed to index")
+        
+    background_tasks.add_task(index_download, download_id)
+    
+    return {"status": "indexing_started"}
 
 @router.get("/settings")
 async def get_settings(db: Session = Depends(get_db)):

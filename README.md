@@ -133,12 +133,12 @@ export RADARR_API_KEY=your_api_key_here
 
 **Auto-detect title and year from filename:**
 ```bash
-python -m m3u8_dl.radarr_cli "The Matrix 1999.mp4"
+python -m m3u8_dl.integrations.radarr "The Matrix 1999.mp4"
 ```
 
 **Specify title and year manually:**
 ```bash
-python -m m3u8_dl.radarr_cli movie.mp4 --title "The Matrix" --year 1999
+python -m m3u8_dl.integrations.radarr movie.mp4 --title "The Matrix" --year 1999
 ```
 
 ## Sonarr Integration
@@ -157,12 +157,12 @@ export SONARR_API_KEY=your_api_key_here
 
 **Auto-detect from filename:**
 ```bash
-python -m m3u8_dl.sonarr_cli "Breaking.Bad.S01E01.mp4"
+python -m m3u8_dl.integrations.sonarr "Breaking.Bad.S01E01.mp4"
 ```
 
 **Specify series, season, and episode manually:**
 ```bash
-python -m m3u8_dl.sonarr_cli episode.mp4 --title "Breaking Bad" --season 1 --episode 1
+python -m m3u8_dl.integrations.sonarr episode.mp4 --title "Breaking Bad" --season 1 --episode 1
 ```
 
 ## How It Works

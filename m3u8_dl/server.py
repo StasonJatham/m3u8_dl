@@ -1,5 +1,6 @@
 from contextlib import asynccontextmanager
 from pathlib import Path
+import asyncio
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.staticfiles import StaticFiles
@@ -9,6 +10,7 @@ from .database import init_db, SessionLocal, Download
 from .routers import api, views
 from .services.websocket_manager import manager
 from .services.download_service import process_download, DownloadRequest
+from .config import config
 
 # Setup logging
 logger = setup_logging(verbose=True)
@@ -67,6 +69,11 @@ app = FastAPI(title="m3u8-dl Server", lifespan=lifespan)
 # Mount static files
 static_dir = Path(__file__).parent / "static"
 app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
+
+# Mount downloads directory for playback
+download_dir = Path(config.DOWNLOAD_DIR)
+download_dir.mkdir(exist_ok=True)
+app.mount("/downloads", StaticFiles(directory=str(download_dir)), name="downloads")
 
 # Include routers
 app.include_router(api.router)

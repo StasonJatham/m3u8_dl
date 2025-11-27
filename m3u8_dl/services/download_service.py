@@ -6,8 +6,8 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel
 
 from ..database import SessionLocal, Download, Settings
-from ..radarr_uploader import RadarrUploader
-from ..sonarr_uploader import SonarrUploader
+from ..integrations.radarr import RadarrUploader
+from ..integrations.sonarr import SonarrUploader
 from ..downloader import download_video
 from ..video_downloader import download_direct
 from .websocket_manager import manager
@@ -99,42 +99,74 @@ async def process_download(req: DownloadRequest, download_id: int):
 
         files = glob.glob(f"{output_path}.*")
         if not files:
-            await update_status(db, download_id, "failed", error="Downloaded file not found")
+            await update_status(db, download_id, "failed", error="Output file not found")
             return
             
-        downloaded_file = files[0]
-        logger.info(f"File downloaded: {downloaded_file}")
+        final_path = files[0]
         
         # Update DB with file path
         download = db.query(Download).filter(Download.id == download_id).first()
         if download:
-            download.file_path = downloaded_file
+            download.file_path = final_path
             db.commit()
+        
+        await update_status(db, download_id, "completed", "100%", "Download completed")
+        
+        # Auto-index if configured (logic can be added here or triggered manually)
+        # For now, we just leave it as completed.
 
-        await update_status(db, download_id, "importing", "80%", "Importing to library...")
-
-        if req.type == 'movie':
-            logger.info("Importing to Radarr...")
-            radarr.upload_and_import(
-                file_path=downloaded_file,
-                title=req.title,
-                year=req.year,
-                quality_profile_id=settings.radarr_quality_profile_id
-            )
-        elif req.type == 'series':
-            logger.info("Importing to Sonarr...")
-            sonarr.upload_and_import(
-                file_path=downloaded_file,
-                title=req.title,
-                season=req.season,
-                episode=req.episode,
-                quality_profile_id=settings.sonarr_quality_profile_id
-            )
-            
-        await update_status(db, download_id, "completed", "100%", "Completed successfully")
-            
     except Exception as e:
-        logger.exception(f"Error processing download: {e}")
+        logger.exception("Error processing download")
         await update_status(db, download_id, "failed", error=str(e))
+    finally:
+        db.close()
+
+def delete_download_files(file_path: str):
+    """Delete downloaded files."""
+    try:
+        if os.path.exists(file_path):
+            os.remove(file_path)
+            logger.info(f"Deleted file: {file_path}")
+    except Exception as e:
+        logger.error(f"Error deleting file {file_path}: {e}")
+
+async def index_download(download_id: int):
+    """Index a completed download to Radarr/Sonarr."""
+    db = SessionLocal()
+    try:
+        download = db.query(Download).filter(Download.id == download_id).first()
+        settings = db.query(Settings).first()
+        
+        if not download or not download.file_path or not os.path.exists(download.file_path):
+            await update_status(db, download_id, "failed", error="File not found for indexing")
+            return
+            
+        await update_status(db, download_id, "importing", task="Indexing...")
+        
+        if download.type == 'movie':
+            radarr = RadarrUploader(settings.radarr_url, settings.radarr_api_key)
+            radarr.upload_and_import(
+                download.file_path,
+                title=download.title,
+                year=download.year,
+                quality_profile_id=settings.radarr_quality_profile_id,
+                copy_files=True # Keep original for seeding/viewing
+            )
+        elif download.type == 'series':
+            sonarr = SonarrUploader(settings.sonarr_url, settings.sonarr_api_key)
+            sonarr.upload_and_import(
+                download.file_path,
+                title=download.title,
+                season=download.season,
+                episode=download.episode,
+                quality_profile_id=settings.sonarr_quality_profile_id,
+                copy_files=True
+            )
+            
+        await update_status(db, download_id, "completed", task="Indexed successfully")
+        
+    except Exception as e:
+        logger.exception("Error indexing download")
+        await update_status(db, download_id, "completed", error=f"Indexing failed: {str(e)}") # Keep as completed, just log error
     finally:
         db.close()
