@@ -33,7 +33,7 @@ async def capture_data(
     try:
         if not browser:
             playwright = await async_playwright().start()
-            browser = await playwright.chromium.launch(headless=True, channel="chrome")
+            browser = await playwright.chromium.launch(headless=True)
             should_close_browser = True
             
         context = await browser.new_context()

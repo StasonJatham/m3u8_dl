@@ -71,8 +71,11 @@ python -m m3u8_dl.server
 # Build image
 docker build -t m3u8-dl .
 
-# Run container
+# Run container (Server Mode)
 docker run -p 8000:8000 -v $(pwd)/downloads:/app/downloads --env-file .env m3u8-dl
+
+# Run container (CLI Mode)
+docker run --rm -v $(pwd)/downloads:/app/downloads m3u8-dl -m m3u8_dl https://example.com/watch/123
 ```
 
 ## Usage

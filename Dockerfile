@@ -17,8 +17,8 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Install patchright Chrome browser
-RUN patchright install chromium
+# Install patchright Chrome browser and system dependencies
+RUN patchright install chromium && patchright install-deps chromium
 
 # Copy application code
 COPY m3u8_dl/ ./m3u8_dl/
