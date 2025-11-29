@@ -85,7 +85,11 @@ async def capture_data(
             logger.info("No m3u8 found yet, looking for watch links...")
             try:
                 # Wait for potential dynamic content
-                await page.wait_for_load_state('networkidle', timeout=5000)
+                try:
+                    await page.wait_for_load_state('networkidle', timeout=10000)
+                except Exception:
+                    logger.debug("Network idle timeout, proceeding anyway...")
+                    await asyncio.sleep(2)  # Extra wait as requested
                 
                 # Use evaluate to get hrefs directly to avoid DOM serialization issues with large pages
                 hrefs = await page.evaluate("""() => {
