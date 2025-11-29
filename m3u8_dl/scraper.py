@@ -87,17 +87,22 @@ async def capture_data(
                 # Wait for potential dynamic content
                 await page.wait_for_load_state('networkidle', timeout=5000)
                 
-                elements = await page.locator('xpath=//*[@id="root"]/div[2]/div/div[2]/div/div//a').all()
-                for element in elements:
-                    href = await element.get_attribute('href')
-                    if href and '/watch/' in href:
-                        if href.startswith('/'):
-                            parsed = urlparse(url)
-                            full_url = f"{parsed.scheme}://{parsed.netloc}{href}"
-                        else:
-                            full_url = href
-                        if full_url not in watch_links:
-                            watch_links.append(full_url)
+                # Use evaluate to get hrefs directly to avoid DOM serialization issues with large pages
+                hrefs = await page.evaluate("""() => {
+                    const links = [];
+                    const elements = document.evaluate('//*[@id="root"]/div[2]/div/div[2]/div/div//a', document, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+                    for (let i = 0; i < elements.snapshotLength; i++) {
+                        const el = elements.snapshotItem(i);
+                        if (el.href && el.href.includes('/watch/')) {
+                            links.push(el.href);
+                        }
+                    }
+                    return links;
+                }""")
+
+                for href in hrefs:
+                    if href not in watch_links:
+                        watch_links.append(href)
             except Exception as e:
                 logger.warning(f"Error scraping watch links: {e}")
         
